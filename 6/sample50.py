@@ -5,6 +5,7 @@ parser = corenlp.StanfordCoreNLP(corenlp_path=corenlp_dir)
 
 def kadai50():
 
+
     a = 'nlp.txt'
     b = '../../study/practice_core/easy_text.txt'
     kadai = []
