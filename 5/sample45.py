@@ -34,7 +34,3 @@ def print_case_pattern_ranking(_grep_str):
 if __name__ == '__main__':
     chunkeds = list('neko.txt.cabocha')
     print_ans(case_patterns(chunkeds))
-     '''
-    for grep_str in ['', 'する', '見る', '与える']:
-        print_case_pattern_ranking(grep_str)
-    '''

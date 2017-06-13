@@ -1,14 +1,16 @@
-import pprint
-import json
-import corenlp
+import re
 
-corenlp_dir = "/home/ashihara/stanford-corenlp-full-2013-06-20/"
+with open('nlp.txt.xml') as f:
+    line = f.readline()
+    while line:
+        word = re.search("<word>(.*?)</word>", line)
+        lemma = re.search("<lemma>(.*?)</lemma>", line)
+        pos = re.search("<POS>(.*?)</POS>", line)
+        if word:
+            print(word.group(1), end='\t')
+        if lemma:
+            print(lemma.group(1),end='\t')
+        if pos:
+            print(pos.group(1))
 
-parser = corenlp.StanfordCoreNLP(corenlp_path=corenlp_dir)
-
-with open('easy_text.txt', encoding='utf-8') as NLP:
-    count = 0
-    for line in NLP:
-        # XMLで取り出すことは諦めた
-        for i in parser.raw_parse(line)["sentences"][0]["words"]:
-            print(i)
+        line = f.readline()

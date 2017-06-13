@@ -22,6 +22,3 @@ if __name__ == '__main__':
         print(kadai[i])
         print('')
 
-#print
-
-

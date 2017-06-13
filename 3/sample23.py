@@ -9,6 +9,7 @@ for i in lines:
     if section_line is not None:
         #print(section_line.group(1))
         #print(section_line)
+        #print(section_line.group(0))
         print(section_line.group(2), len(section_line.group(1)))
 
 
