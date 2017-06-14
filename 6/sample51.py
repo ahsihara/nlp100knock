@@ -10,16 +10,18 @@ def make_word_list():
     kadai = kadai50()
     word_list = []
     for j in range(len(kadai)):
+        word_list.append([])
         for i in parser.raw_parse(kadai[j])["sentences"][0]["words"]:
             if i[0] != '.':
-                word_list.append(i[0])
+                word_list[j].append(i[0])
             else:
-                word_list.append('')
+                word_list[j].append('')
     return word_list
 
 
 if __name__ == '__main__':
     word_list = make_word_list()
-    for i in range(10):
-        print(word_list[i])
+    for i in range(3):
+        for j in range(len(word_list[i])):
+            print(word_list[i][j])
 

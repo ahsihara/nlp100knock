@@ -30,6 +30,3 @@ def print_ans(_sahen_case_frame_patterns):
 if __name__ == '__main__':
     chunkeds = sample41.list('neko.txt.cabocha')
     print_ans(sahen_case_frame_patterns(chunkeds))
-
-    #print(subprocess.run('cat sahen_case_frame_patterns.txt | cut -f 1 | sort | uniq -c | sort -r | head -10', shell=True))
-    #print(subprocess.run('cat sahen_case_frame_patterns.txt | cut -f 1,2 | sort | uniq -c | sort -r | head -10', shell=True))
