@@ -1,81 +1,70 @@
-import re
-from xml.etree import ElementTree
-from sample51 import make_word_list
 
-tree = ElementTree.parse("nlp.txt.xml") # ElementTreeでパーシング
+import xml.etree.ElementTree as ET
+from pprint import pprint
+
+tree = ET.parse('nlp.txt.xml')
 root = tree.getroot()
+coreference = root.findall('document/coreference/coreference')
 
-def make_src():
-    src = []
-    #global sentences
-    sentences = []
-    for sentence in root[0][0]:
-        for token in sentence[0]:
-            sentences.append(token[0].text)
-        src.append(sentences)
-        sentences = []
-
-    return src
-
+#[置き換え単語, 何文目, 開始単語位置, 終了単語位置]
 def make_coreference():
-    coreferences ,mentions = [], []
-    tags = {}
-    for coreference in root[0][1]:
-        for mention in coreference:
-            b = mention.attrib
-            if b.keys():
-                tags["representative"]=b['representative']
-            for m in mention:
-                tags[m.tag]=m.text
-            mentions.append(tags)
-            tags = {}
-        coreferences.append(mentions)
-        mentions = []
-    return coreferences
+    coreference_list = []
+    for i in coreference:
+        sentence_num = i.findall('mention/sentence')
+        start_num = i.findall('mention/start')
+        end_num = i.findall('mention/end')
 
-def make_referenceslist():
-    referenceslist = []
-    for coreferencex in coreferences:
-        for mentionx in coreferencex:
-            if "representative" in mentionx:
-                #print(mentionx)
-                #representative_text = mentionx["text"]
-                aa, bb, cc = int(mentionx['sentence'])-1, int(mentionx['start'])-1, int(mentionx['end'])-1
-                #aa = mentionx['sentence']
-                #print(aa, bb, cc)
-                try:
-                    representative_text = ' '.join(word_list[aa][bb:cc])
-                except:
-                    representative_text = 'wwwww'
-                #representative_text = 'aaa'
-                representative_text = re.sub(r'-LRB- ',r'(',representative_text)
-                representative_text = re.sub(r' -RRB-',r')',representative_text)
-                representative_text = "「"+representative_text+"("
-            else:
-                referenceslist.append([mentionx["sentence"],mentionx["start"],representative_text])
-                referenceslist.append([mentionx["sentence"],mentionx["end"],")」"])
-    return referenceslist
+        coreference_list.append([' '.join(word_list[int(sentence_num[0].text)-1][int(start_num[0].text)-1:int(end_num[0].text)-1])])
+        for  j in range(1, len(sentence_num)):
+            coreference_list[-1].append([int(sentence_num[j].text)-1, int(start_num[j].text)-1, int(end_num[j].text)-1])
+
+    return coreference_list
+
+#その単語を開始位置とする共参照表現はあるか調べる
+def check_co(sentence, start):
+    #flg = 0
+    #flg_list = []
+    for i in range(len(coreference_list)):
+        for j in range(1, len(coreference_list[i])):
+            if sentence == coreference_list[i][j][0] and start == coreference_list[i][j][1]:
+                return [coreference_list[i][0], coreference_list[i][j][2]]
+    return 0
 
 def print_ans():
-    tokens = []
-    n = 1
-    m = 1
-    for sentence in src:
-        for tokens in sentence:
-            for x in referenceslist:
-                if int(x[0]) == n and int(x[1]) == m:
-                    print(x[2], end="")
-            tokens = re.sub(r'-LRB-', r'(', tokens)
-            tokens = re.sub(r'-RRB-', r')', tokens)
-            print(tokens, end=" ")
-            m += 1
-        print("")
-        m = 1
-        n += 1
+    i, j = 0, 0
+    while i < len(word_list):
+        j = 0
+        while j < len(word_list[i]):
+            flg = check_co(i, j)
+
+            if flg != 0:
+                print('[', end=' ')
+                while j != flg[1]:
+                    print(word_list[i][j], end=' ')
+                    j += 1
+                print('({})'.format(flg[0]), ']', end=' ')
+            if j >= len(word_list[i]):
+                break
+            print(word_list[i][j],end=' ')
+
+            j += 1
+        print('\n')
+        i += 1
+
+
 
 if __name__ == "__main__":
-    word_list = make_word_list()
-    src = make_src()
-    coreferences = make_coreference()
-    referenceslist = make_referenceslist()
+
+    word_list = []
+    with open('output.txt') as f:
+        line = f.readline()
+        while line:
+            line = line.replace('-RRB-', ')')
+            line = line.replace('-LRB-', '(')
+            word_list.append(line.split())
+            line = f.readline()
+
+    coreference_list = make_coreference()
+    #pprint(coreference_list)
     print_ans()
+

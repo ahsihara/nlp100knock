@@ -1,88 +1,46 @@
-import os
-import subprocess
+
 import xml.etree.ElementTree as ET
-import re
+from pprint import pprint
 
-fname = 'nlp.txt'
-fname_parsed = 'nlp.txt.xml'
+tree = ET.parse('nlp.txt.xml')
+root = tree.getroot()
+parse_nnp = root.findall('document/sentences/sentence/parse')
 
+def search_NNP(parse):
+    parse = parse.text.replace('(', '( ')
+    parse = parse.replace(')', ' )')
+    parse = parse.split()
+    nnp_list = []
+    for i in range(len(parse)):
+        if parse[i] == 'NP':
+            right, left = 0, 0
+            for j in range(1, len(parse)):
+                if parse[i + j] == '(':
+                    left += 1
+                elif parse[i + j] == ')':
+                    right += 1
+                if right > left:
+                    nnp_list.append(' '.join(parse[i+1:i+j]))
+                    break
+    return nnp_list
 
-# タグと内容を抽出するための正規表現
-pattern = re.compile(r'''
-    ^
-    \(          # S式の開始カッコ
-        (.*?)   # = タグ
-        \s      # 空白
-        (.*)    # = 内容
-    \)          # s式の終わりのカッコ
-    $
-    ''', re.VERBOSE + re.DOTALL)
+def clean_print(nnp_list):
+    delete_list = ['(', ')','NNPS', 'NNS', 'NNP', 'JJR', 'NN', 'NP', 'JJ',
+                   'NNS', 'VP', 'JJ', 'CC', 'VBZ','DT', 'PP', 'S', 'VBN',
+                   'IN', 'NNP', 'PRN', 'PRPS']
+    for i in delete_list:
+        nnp_list = nnp_list.replace(i, '')
 
+    nnp_list = nnp_list.replace('-RRB- -RRB-', ')')
+    nnp_list = nnp_list.replace('-LRB- -LRB-', '(')
+    nnp_list = nnp_list.replace(', ,', ',')
+    nnp_list = nnp_list.replace('RB', '')
+    nnp_list = nnp_list.split()
 
-def parse_nlp():
-    if not os.path.exists(fname_parsed):
+    print(' '.join(nnp_list))
 
-        # StanfordCoreNLP実行、標準エラーはparse.outへ出力
-        subprocess.run(
-            'java -cp "/usr/local/lib/stanford-corenlp-full-2016-10-31/*"'
-            ' -Xmx2g'
-            ' edu.stanford.nlp.pipeline.StanfordCoreNLP'
-            ' -annotators tokenize,ssplit,pos,lemma,ner,parse,dcoref'
-            ' -file ' + fname + ' 2>parse.out',
-            shell=True,     # shellで実行
-            check=True      # エラーチェックあり
-        )
-
-
-def ParseAndExtractNP(str, list_np):
-    match = pattern.match(str)
-    tag = match.group(1)
-    value = match.group(2)
-
-    # 内容の解析
-    # カッコで入れ子になっている場合は、一番外側を切り出して再帰
-    depth = 0       # カッコの深さ
-    chunk = ''      # 切り出し中の文字列
-    words = []
-    for c in value:
-
-        if c == '(':
-            chunk += c
-            depth += 1      # 深くなった
-
-        elif c == ')':
-            chunk += c
-            depth -= 1      # 浅くなった
-            if depth == 0:
-                words.append(ParseAndExtractNP(chunk, list_np))
-                chunk = ''
-        else:
-            # カッコでくくられていない部分の空白は無視
-            if not (depth == 0 and c == ' '):
-                chunk += c
-
-    # 最後の単語を追加
-    if chunk != '':
-        words.append(chunk)
-
-    # 空白区切りに整形
-    result = ' '.join(words)
-
-    # NPならlist_npに追加
-    if tag == 'NP':
-        list_np.append(result)
-
-    return result
-
-
-# nlp.txtを解析
-parse_nlp()
-
-# 解析結果のxmlをパース
-root = ET.parse(fname_parsed)
-
-# sentence列挙、1文ずつ処理
-for parse in root.iterfind('./document/sentences/sentence/parse'):
-    result = []
-    ParseAndExtractNP(parse.text.strip(), result)
-    print(*result, sep='\n')
+if __name__ == '__main__':
+    for i in parse_nnp:
+        nnp_list = search_NNP(i)
+        for j in nnp_list:
+            clean_print(j)

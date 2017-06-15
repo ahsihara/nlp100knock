@@ -1,64 +1,58 @@
-import os
-import subprocess
+
 import xml.etree.ElementTree as ET
 
-fname = 'nlp.txt'
-fname_parsed = 'nlp.txt.xml'
+tree = ET.parse('nlp.txt.xml')
+root = tree.getroot()
+coreference = root.findall('document/sentences/sentence/dependencies[@type="collapsed-dependencies"]')
+
+def search_verb(co_dependence):
+    verb_nsubj = []
+    verb_dobj = []
+    nsubj = []#[親番号、自分の文字]
+    dobj = []#[親番号、自分の文字]
+
+    nsubj_line = co_dependence.findall('dep[@type="nsubj"]')
+    dobj_line = co_dependence.findall('dep[@type="dobj"]')
+
+    for i in nsubj_line:
+        governor = i.find('governor')
+        dependent = i.find('dependent')
+        verb_nsubj.append((governor.get('idx'), governor.text))
+        nsubj.append((governor.get('idx'), dependent.text))
+    for i in dobj_line:
+        governor = i.find('governor')
+        dependent = i.find('dependent')
+        verb_dobj.append((governor.get('idx'), governor.text))
+        dobj.append((governor.get('idx'), dependent.text))
+
+    verb = list(set(verb_nsubj) & set(verb_dobj))
+
+    return verb, nsubj, dobj
+
+def print_ans(verb, nsubj, dobj):
+    for i in verb:
+        flg_nsubj, flg_dobj = 0, 0
+        idx = i[0]
+
+        for j in nsubj:
+            if j[0] == idx:
+                flg_nsubj = j
+                break
+        for j in dobj:
+            if j[0] == idx:
+                flg_dobj = j
+                break
+
+        if flg_nsubj != 0 and flg_dobj != 0:
+            print('{}\t{}\t{}'.format(flg_nsubj[1], i[1], flg_dobj[1]))
+
+def make_taple(co_dependence):
+    verb, nsubj, dobj = search_verb(co_dependence)
+    if len(verb) == 0:
+        return
+    print_ans(verb, nsubj, dobj)
 
 
-def parse_nlp():
-    if not os.path.exists(fname_parsed):
-
-        # StanfordCoreNLP実行、標準エラーはparse.outへ出力
-        subprocess.run(
-            'java -cp "/usr/local/lib/stanford-corenlp-full-2016-10-31/*"'
-            ' -Xmx2g'
-            ' edu.stanford.nlp.pipeline.StanfordCoreNLP'
-            ' -annotators tokenize,ssplit,pos,lemma,ner,parse,dcoref'
-            ' -file ' + fname + ' 2>parse.out',
-            shell=True,     # shellで実行
-            check=True      # エラーチェックあり
-        )
-
-
-# nlp.txtを解析
-parse_nlp()
-
-# 解析結果のxmlをパース
-root = ET.parse(fname_parsed)
-
-# sentence列挙、1文ずつ処理
-for sentence in root.iterfind('./document/sentences/sentence'):
-    sent_id = int(sentence.get('id'))       # sentenceのid
-
-    # それぞれの語の辞書を作成
-    dict_pred = {}      # {述語のidx, 述語のtext}
-    dict_nsubj = {}     # {述語のidx, 述語とnsubj関係の子のtext（＝主語）}
-    dict_dobj = {}      # {述語のidx, 述語とdobj関係の子のtext（＝目的語）}
-
-    # dependencies列挙
-    for dep in sentence.iterfind(
-        './dependencies[@type="collapsed-dependencies"]/dep'
-    ):
-
-        # 関係チェック
-        dep_type = dep.get('type')
-        if dep_type == 'nsubj' or dep_type == 'dobj':
-
-            # 述語の辞書に追加
-            govr = dep.find('./governor')
-            idx = govr.get('idx')
-            dict_pred[idx] = govr.text      # 重複するが無害なのでチェックは省略
-
-            # 主語or目的語の辞書に追加
-            if dep_type == 'nsubj':
-                dict_nsubj[idx] = dep.find('./dependent').text
-            else:
-                dict_dobj[idx] = dep.find('./dependent').text
-
-    # 述語を列挙、主語と目的語の両方を持つもののみ出力
-    for idx, pred in sorted(dict_pred.items(), key=lambda x: x[0]):
-        nsubj = dict_nsubj.get(idx)
-        dobj = dict_dobj.get(idx)
-        if nsubj is not None and dobj is not None:
-            print('{}\t{}\t{}'.format(nsubj, pred, dobj))
+if __name__ == '__main__':
+    for i in range(len(coreference)):
+        make_taple(coreference[i])

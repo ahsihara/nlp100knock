@@ -6,13 +6,17 @@ parser = corenlp.StanfordCoreNLP(corenlp_path=corenlp_dir)
 def kadai50():
 
     a = 'nlp.txt'
-    b = '../../study/practice_core/easy_text.txt'
+
     kadai = []
     with open(a) as f:
         sentences = f.read()
-        check = parser.raw_parse(sentences)
-        for i in range(len(check['sentences'])):
-            kadai.append(check['sentences'][i]['text'])
+        sentence = sentences.split('.\n\n')
+        for i in range(len(sentence)):
+            check = parser.raw_parse(sentence[i])
+            for j in range(len(check['sentences'])):
+                kadai.append(check['sentences'][j]['text'])
+
+        print(len(kadai))
 
     return kadai
 
@@ -20,5 +24,5 @@ if __name__ == '__main__':
     kadai = kadai50()
     for i in range(len(kadai)):
         print(kadai[i])
-        print('')
+        print()
 

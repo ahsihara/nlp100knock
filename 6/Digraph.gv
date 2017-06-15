@@ -1,0 +1,27 @@
+digraph {
+	node [shape=circle]
+	0 [label=ROOT]
+	6 [label=related]
+		0 -> 6
+	6 [label=related]
+	2 [label=such]
+		6 -> 2
+	6 [label=related]
+	4 [label=NLP]
+		6 -> 4
+	6 [label=related]
+	5 [label=is]
+		6 -> 5
+	9 [label=area]
+	8 [label=the]
+		9 -> 8
+	6 [label=related]
+	9 [label=area]
+		6 -> 9
+	12 [label=interaction]
+	11 [label="humani-computer"]
+		12 -> 11
+	9 [label=area]
+	12 [label=interaction]
+		9 -> 12
+}

@@ -15,13 +15,22 @@ def make_word_list():
             if i[0] != '.':
                 word_list[j].append(i[0])
             else:
+                #記入するときだけ
+                #word_list[j].append('.')
                 word_list[j].append('')
     return word_list
 
-
 if __name__ == '__main__':
     word_list = make_word_list()
-    for i in range(3):
-        for j in range(len(word_list[i])):
-            print(word_list[i][j])
+    '''
+    with open('output.txt', 'w') as f:
+        for i in range(len(word_list)):
+            f.write(' '.join(word_list[i]))
+            f.write('\n')
+            if i == 11:
+                f.write('.')
+                f.write('\n')
+    '''
+
+    pprint(word_list)
 
