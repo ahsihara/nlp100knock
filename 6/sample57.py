@@ -1,6 +1,5 @@
 
 import xml.etree.ElementTree as ET
-import pydot
 from graphviz import Digraph
 from pprint import pprint
 
@@ -27,5 +26,5 @@ def make_graph(co_dependence):
     G.render(view=True)
 
 if __name__ == '__main__':
-    n = 2 #何文目？
+    n = 20 #何文目？
     make_graph(coreference[n-1])

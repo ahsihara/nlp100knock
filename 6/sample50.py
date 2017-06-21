@@ -16,7 +16,7 @@ def kadai50():
             for j in range(len(check['sentences'])):
                 kadai.append(check['sentences'][j]['text'])
 
-        print(len(kadai))
+        #print(len(kadai))
 
     return kadai
 
